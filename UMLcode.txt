@@ -1,0 +1,109 @@
+@startuml
+title OS Memory Management Simulator - Class Diagram
+
+interface PageReplacementPolicy {
+    +selectFrameToReplace(): int
+    +pageAccessed(frameNumber: int): void
+}
+
+class FIFOPolicy implements PageReplacementPolicy
+class LRUPolicy implements PageReplacementPolicy
+class RandomPolicy implements PageReplacementPolicy
+
+class TLB {
+    -capacity: int
+    -tlb: Map<String, Integer>
+    +lookup(pid: int, page: int): Integer
+    +update(pid: int, page: int, frame: int): void
+    +invalidate(pid: int, frame: int): void
+    +clear(): void
+}
+
+class MemoryManager {
+    -totalFrames: int
+    -frameOccupied: boolean[]
+    -replacementPolicy: PageReplacementPolicy
+    -tlb: TLB
+    -totalAccesses: int
+    -pageFaults: int
+    -tlbHits: int
+    -tlbMisses: int
+    -evictions: int
+    +access(p: Process, virtualPage: int): void
+    +allocate(p: Process): void
+    +deallocate(p: Process): void
+    +printMetrics(): void
+    +findFreeFrame(): int
+    +evictFrame(freeFrame: int): void
+}
+
+class PageTable {
+    -outerTable: Map<Integer, Map<Integer, Integer>>
+    +getFrame(page: int): Integer
+    +mapPage(page: int, frame: int): void
+    +unmapFrame(frame: int): void
+    +getAllFrames(): List<Integer>
+    +clear(): void
+}
+
+class Process {
+    -pid: int
+    -pageTable: PageTable
+    -pagesRequired: int
+    +getPagesRequired(): int
+    +getPid(): int
+    +getPageTable(): PageTable
+}
+
+class ProcessManager {
+    -pidToProcessMap: Map<Integer, Process>
+    -pid: int
+    +createProcess(pages: int): Process
+    +removeProcess(pid: int): void
+    +getProcess(pid: int): Process
+    +getAllProcess() : Map<Integer,Process>
+}
+
+class Logger {
+    {static} +enabled: boolean
+    {static} +enable(): void
+    {static} +disable(): void
+    {static} +log(msg: String): void
+    {static} +warn(msg: String): void
+    {static} +err(msg: String): void
+}
+
+class FIFOPolicy {
+    -frameQueue: Queue<Integer> 
+    +selectFrameToReplace(): int 
+    +pageAccessed(int frameNumber): void 
+}
+
+class LRUPolicy {
+    -lruQueue : LinkedList<Integer>
+    +selectFrameToReplace() : int
+    +pageAccessed(frameNumber: int) : void
+}
+
+class RandomPolicy {
+    -usedFrames : Set<Integer>
+    -rand : Random
+    +selectFrameToReplace() : int
+    +pageAccessed(frameNumber: int) : void
+}
+
+
+MemoryManager --> TLB
+MemoryManager --> PageReplacementPolicy
+MemoryManager --> Process
+MemoryManager --> Logger
+
+TLB --> Logger
+Process --> PageTable
+ProcessManager --> Process
+PageTable --> Logger
+
+FIFOPolicy --> PageReplacementPolicy
+LRUPolicy --> PageReplacementPolicy
+RandomPolicy --> PageReplacementPolicy
+@enduml
